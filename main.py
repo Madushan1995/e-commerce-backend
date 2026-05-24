@@ -1,13 +1,17 @@
 from fastapi import FastAPI, Depends
-from routes import users, auth
+from routes import users, auth, product
 
+import models
 from core.database import Base, engine, get_db
 from sqlalchemy import text
 
 app = FastAPI()
 
+Base.metadata.create_all(bind=engine)
+
 app.include_router(users.router)
 app.include_router(auth.router)
+app.include_router(product.router)
 
 
 @app.get("/")

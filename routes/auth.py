@@ -29,9 +29,23 @@ def register(body:RegisterRequest,db=Depends(get_db)):
         email = body.email.lower().strip(),
         hashed_password = hash_password(body.password),
         role = "customer",
+        
     )
 
     db.add(user)
     db.commit()
     db.refresh(user)
     return user
+
+@router.post("/login",response_model=TokenResponse)
+def login(body: LoginRequest, db=Depends(get_db)):
+
+    user = db.scalar(select(User).where(User.email == body.email.lower().strip()))
+
+    if user is None or not verify_password(body.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail = "Wrong email or password"
+        )
+    token = create_access_token(user.id, user.role)
+    return TokenResponse(access_token=token)
